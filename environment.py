@@ -19,8 +19,11 @@ class Environment:
         print("State of each room: ", self.__state) # ??
         print("\n\n")
     
+    def insideRange(self, room):
+        return 1 <= room and room <= self.getRooms()
+
     def isClean(self, room): 
-        if (room < 1 or self.__rooms < room):
+        if self.insideRange(room) == False:
             raise TypeError("Room is out of bounds.")
         return self.__state[room - 1]
     
@@ -59,8 +62,21 @@ class Environment:
                 currentRoom = indexRoom
             indexRoom -= 1
 
-
         return min(solutionOne, solutionTwo)
+
+    def completelyClean(self):
+        for room in self.__state:
+            if room == DIRTY:
+                return False
+        return True 
+
 
     def getRooms(self):
         return self.__rooms
+    
+
+    def clean(self, room):
+        if self.insideRange(room) == False:
+            raise TypeError("Room is out of bounds.")
+        self.__state[room - 1] = CLEAN
+
