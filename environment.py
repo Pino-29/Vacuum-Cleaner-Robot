@@ -5,10 +5,9 @@ CLEAN = True
 DIRTY = False 
 
 class Environment:
-    __rooms = 0
-    __state = []
     
     def __init__(self):
+        self.__state = []
         self.__rooms = randint(1, MAX_ROOMS)
         
         for room in range(0, self.__rooms):

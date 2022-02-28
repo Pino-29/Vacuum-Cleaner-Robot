@@ -5,20 +5,49 @@ LEFT = False
 RIGHT = True
 
 class Vacuum:
-    __currentRoom = 0
-    __startingRoom = 0
-    __operationsDone = 0
-    environment = Environment()
-
     def __init__(self):
+        self.environment = Environment()
+        self.__operationsDone = 0
+        self.__flag = False
+        self.__direction = LEFT 
+        self.__optimalSolution = 0
+
         self.__currentRoom = self.__startingRoom = randint(1, self.environment.getRooms())
 
+        self.__visited = []
+        for i in range(0, self.environment.getRooms()):
+            self.__visited.append(False)
+        self.mark(self.getCurrentRoom())
+        
+        if self.getCurrentRoom() <= self.environment.getRooms() // 2:
+            self.__direction = LEFT
+        else:
+            self.__direction = RIGHT
+        self.__optimalSolution = self.environment.optimalSolution(self.getCurrentRoom())
+
+
+    def mark(self, room):
+        if self.environment.insideRange(room) == False:
+            raise TypeError("Room is out of bounds.")
+        self.__visited[room - 1] = True
+
     def performance(self):
-        return (float)(self.__operationsDone / self.environment.optimalSolution(self.__startingRoom))
+        if self.timeSpent() == 0:
+            return 100.
+        return (float)(self.__optimalSolution / self.timeSpent()) * 100
 
     def show(self):
         print("Current room: ", self.__currentRoom)
+        print("Direction: ", end = "")
+        if (self.__direction == LEFT):
+            print("left")
+        else:
+            print("right")
+        print(self.__visited)
         self.environment.show()
+
+    def getOptimalSolution(self):
+        return self.__optimalSolution
 
     def getCurrentRoom(self):
         return self.__currentRoom
@@ -30,8 +59,7 @@ class Vacuum:
         return self.environment.isClean(self.getCurrentRoom()) == False   
     
     def hasCleanedEverything(self):
-        return self.environment.completelyClean()
-
+        return self.__visited.count(False) == 0 and self.environment.completelyClean()
 
 
     def __costOfMovement(self):
@@ -39,7 +67,6 @@ class Vacuum:
     
     def __costOfSucking(self):
         return 1
-
 
 
     def getEnvironment(self):
@@ -62,52 +89,17 @@ class Vacuum:
     def suck(self):
         self.__operationsDone += self.__costOfSucking()
         self.environment.clean(self.getCurrentRoom())
-    
 
     def __optimalMovement(self): # Identify the best movement
-        # hello world :D
-        solutionOne = solutionTwo = 0
-        
-        # To left and then to right
-        currentRoom = indexRoom = self.getCurrentRoom()
-        while (indexRoom >= 1):
-            if self.environment.isClean(indexRoom) == False:
-                solutionOne += (abs(currentRoom - indexRoom) * self.__costOfMovement() + self.__costOfSucking())
-                currentRoom = indexRoom
-            indexRoom -= 1
-
-        indexRoom = self.getCurrentRoom() + 1
-        while (indexRoom <= self.environment.getRooms()):
-            if self.environment.isClean(indexRoom) == False:
-                solutionOne += (abs(currentRoom - indexRoom) * self.__costOfMovement() + self.__costOfSucking())
-                currentRoom = indexRoom
-            indexRoom += 1
-        
-        # To right and then to left
-        currentRoom = indexRoom = self.getCurrentRoom()
-        while (indexRoom <= self.environment.getRooms()):
-            if self.environment.isClean(indexRoom) == False:
-                solutionTwo += (abs(currentRoom - indexRoom) * self.__costOfMovement() + self.__costOfSucking())
-                currentRoom = indexRoom
-            indexRoom += 1
-
-        indexRoom = self.getCurrentRoom() - 1
-        while (indexRoom >= 1):
-            if self.environment.isClean(indexRoom) == False:
-                solutionTwo += (abs(currentRoom - indexRoom) * self.__costOfMovement() + self.__costOfSucking())
-                currentRoom = indexRoom
-            indexRoom -= 1
-
-        if solutionOne < solutionTwo:
-            for index in range(1, self.getCurrentRoom() + 1):
-                if self.environment.isClean(index) == False:
-                    return LEFT 
-            return RIGHT
-        else:
-            for index in range(self.getCurrentRoom(), self.environment.getRooms() + 1):
-                if self.environment.isClean(index) == False:
-                    return RIGHT 
-            return LEFT
+        if self.__flag == False:
+            if (self.__direction == RIGHT and self.getCurrentRoom() == self.environment.getRooms()) \
+             or (self.__direction == LEFT and self.getCurrentRoom() == 1):
+                # change your direction
+                if self.__direction == LEFT:
+                    self.__direction = RIGHT
+                else:
+                    self.__direction = LEFT
+                self.__flag = True
 
 
     def run(self):
@@ -116,10 +108,12 @@ class Vacuum:
             self.suck()
         else:
             # print("Optimal Movement: ", self.__optimalMovement())
-            if self.__optimalMovement() == RIGHT:
+            self.__optimalMovement()
+            if self.__direction == RIGHT:
                 self.moveRight()
             else:
                 self.moveLeft()
+            self.mark(self.getCurrentRoom()) 
     
 
     def timeSpent(self):
